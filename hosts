@@ -1,0 +1,24 @@
+[machines]
+
+[machines:children]
+windows
+linux
+
+[windows]
+win10 ansible_host=192.168.216.135
+winserv ansible_host=192.168.216.134
+
+[linux]
+ubuntu ansible_host=192.168.216.136
+
+[machines:vars]
+ansible_user=alice
+
+[windows:vars]
+ansible_user=alice@securewatch.com
+ansible_connection=winrm
+ansible_winrm_transport=ntlm
+ansible_winrm_server_cert_validation=ignore
+
+[linux:vars]
+ansible_connection=ssh

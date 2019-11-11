@@ -1,0 +1,6 @@
+- hosts: all
+  tasks:
+    - ping:
+      when: ansible_os_family != "Windows"
+    - win_ping:
+      when: ansible_os_family == "Windows"

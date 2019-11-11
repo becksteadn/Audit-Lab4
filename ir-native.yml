@@ -1,0 +1,19 @@
+- hosts: linux
+  tasks:
+    - name: Get recent logins
+      shell: cat /var/log/auth.og | grep "Accepted" | cut -d' ' -f1,2,3,9
+      register: logins
+
+    - name: Get running processes
+      shell: ps aux
+      register: processes
+
+    - name: Get outbound connections
+      shell: blah
+      register: connections
+
+- hosts: windows
+  tasks:
+    - name: blah
+      win_command: blah
+      register: blah

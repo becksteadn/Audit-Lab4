@@ -1,0 +1,44 @@
+- hosts: linux
+  tasks:
+    - name: Get installed applications
+      shell: apt list --installed
+      register: applications
+    - name: Get startup programs
+      shell: systemctl list-unit-files | grep enabled
+      register: startup
+    - name: Print host information
+      debug:
+        msg:
+          - "Installed Applications"
+          - "{{ applications.stdout_lines }}"
+          - "Startup Programs"
+          - "{{ startup.stdout_lines }}"
+
+- hosts: windows
+  tasks:
+    - name: Get installed features
+      #win_shell: Get-WindowsFeature | Where Installed | Select-Object Name
+      win_shell: dism /online /get-features
+      register: features
+
+    - name: Get only installed features
+      set_fact:
+        installed_features: "{{ installed_features | default([]) + [item] }}"
+      with_items: "{{ features.stdout.split('State') }}"
+      when: "'Enabled' in item"
+
+    - name: Get installed applications
+      win_command: wmic product get name
+      register: applications
+    - name: Get startup programs
+      win_command: wmic startup get caption,command
+      register: startup
+    - name: Print host information
+      debug:
+        msg:
+          - "Enabled Windows Features"
+          - "[{% for feature in installed_features %}'{{ feature[28:] | trim }}', {% endfor %}]"
+          - "Installed Applications"
+          - "{{ applications.stdout_lines[1:] | reject('equalto', '') | list }}"
+          - "Startup Programs"
+          - "{{ startup.stdout_lines[1:] | reject('equalto', '') | list }}"

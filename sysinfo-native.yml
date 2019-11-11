@@ -1,0 +1,60 @@
+- hosts: linux
+  tasks:
+    - name: Get hostname
+      shell: hostname
+      register: hostname
+    - name: Get OS version
+      shell: lsb_release -ds
+      register: os
+    - name: Get patch information
+      shell: uname -r
+      register: patches
+    - name: Get IP address information
+      shell: ip -br a
+      register: ips
+    - name: Get user account information
+      shell: cat /etc/passwd | cut -d':' -f1
+      register: users
+    - name: Print host information
+      debug:
+        msg:
+          - "Host is {{ hostname.stdout }}"
+          - "OS is {{ os.stdout }}"
+          - "Kernel release is version {{ patches.stdout }}"
+          - "IP Addresses"
+          - "{{ ips.stdout_lines }}"
+          - "Users"
+          - "{{ users.stdout_lines }}"
+
+- hosts: windows
+  tasks:
+    - name: Get hostname
+      win_command: wmic computersystem get name
+      register: hostname
+    - name: Get connected domain
+      win_command: wmic computersystem get domain
+      register: domain
+    - name: Get OS version
+      win_command: wmic os get Caption
+      register: os
+    - name: Get patch information
+      win_command: wmic qfe get hotfixid,installedon
+      register: patches
+    - name: Get IP address information
+      win_command: wmic nicconfig get IPAddress
+      register: ips
+    - name: Get user account information
+      win_command: wmic useraccount get name
+      register: users
+    - name: Print host information
+      debug:
+        msg:
+          - "Host is {{ hostname.stdout.split('Name')[1] | trim }}"
+          - "Domain is {{ domain.stdout.split('Domain')[1] | trim }}"
+          - "OS is {{ os.stdout.split('Caption')[1] | trim }}"
+          - "Patches"
+          - "[{% for patch in patches.stdout.split('KB')[1:] %}'KB{{patch | trim }}',{% endfor %}]"
+          - "IP Addresses"
+          - "[{% for ip in ips.stdout_lines[1:] %}{% if ip.strip() != '' %}'{{ ip | replace('\"', '') | trim }}', {% endif %}{% endfor %}]"
+          - "User Accounts"
+          - "[{% for user in users.stdout_lines[1:] %}{% if user.strip() != '' %}'{{ user | trim }}', {% endif %}{% endfor %}]"
