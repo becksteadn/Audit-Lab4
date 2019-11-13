@@ -9,11 +9,37 @@
       register: processes
 
     - name: Get outbound connections
-      shell: blah
+      shell: netstat -atn | tr -s ' ' | cut -f5 -d ' ' | grep -v '127.0.0.1'
       register: connections
+
+    - debug:
+        msg:
+          - "Recent logins"
+          - "{{ logins.stdout_lines }}"
+          - "Running processes"
+          - "{{ processes.stdout_lines }}"
+          - "Outbound connections"
+          - "{{ connections.stdout_lines }}"
 
 - hosts: windows
   tasks:
-    - name: blah
-      win_command: blah
-      register: blah
+    - name: Get recent logins
+      win_shell: Get-LocalUser | Where-Object {$_.Lastlogon -ge (Get-Date).AddDays(-7)} | Select-Object Name,Enabled,Lastlogon | Format-List
+      register: logins
+
+    - name: Get running processes
+      win_shell: ps | sort -desc path | select -first 100 | Format-Table -a; sleep 1; cls
+      register: processes
+
+    - name: Get outbound connections
+      win_shell: Get-NetTCPConnection | where {$_.State -eq "Established"} | where {($_.RemotePort -ne 443) -and ($_.RemotePort -ne 80)}
+      register: connections
+
+    - debug:
+        msg:
+          - "Recent logins"
+          - "{{ logins.stdout_lines }}"
+          - "Running processes"
+          - "{{ processes.stdout_lines }}"
+          - "Outbound connections"
+          - "{{ connections.stdout_lines }}"
