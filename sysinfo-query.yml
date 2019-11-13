@@ -1,0 +1,51 @@
+- hosts: linux
+  tasks:
+    - name: Get hostname
+      shell: osqueryi --json "select local_hostname from system_info"
+      register: hostname
+
+    - name: Get IP information
+      shell: osqueryi --json "select friendly_name,address from interface_addresses"
+      register: ips
+
+    - name: Get users
+      shell: osqueryi --json "select username,description from users"
+      register: users
+
+    - debug:
+        msg:
+          - "Hostname"
+          - "{{ hostname.stdout }}"
+          - "IP Addresses"
+          - "{{ ips.stdout }}"
+          - "Users"
+          - "{{ users.stdout }}"
+
+- hosts: windows
+  tasks:
+    - name: Get hostname
+      win_command: osqueryi.exe --json "select local_hostname from system_info"
+      register: hostname
+
+    - name: Get connected domain
+      win_command: osqueryi.exe --json "select name from ntdomains"
+      register: domain
+
+    - name: Get IP information
+      win_command: osqueryi.exe --json "select friendly_name,address from interface_addresses"
+      register: ips
+
+    - name: Get users
+      win_command: osqueryi.exe --json "select username,description from users"
+      register: users
+
+    - debug:
+        msg:
+          - "Hostname"
+          - "{{ hostname.stdout }}"
+          - "Domain"
+          - "{{ domain.stdout }}"
+          - "IP Addresses"
+          - "{{ ips.stdout }}"
+          - "Users"
+          - "{{ users.stdout }}"
