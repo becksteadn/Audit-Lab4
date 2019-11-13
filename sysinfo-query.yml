@@ -1,24 +1,20 @@
 - hosts: linux
   tasks:
     - name: Get hostname
-      shell: osqueryi --json "select local_hostname from system_info"
+      shell: echo "select local_hostname from system_info;" | osqueryi
       register: hostname
 
-    - name: Get OS
-      shell: osqueryi --json "select name from os_version"
-      register: os
-
-    - name: Get patches
-      shell: osqueryi --json "select hotfix_id,installed_on from patches"
-      register: patches
-
     - name: Get IP information
-      shell: osqueryi --json "select friendly_name,address from interface_addresses"
+      shell: echo "select friendly_name,address from interface_addresses;" | osqueryi
       register: ips
 
     - name: Get users
-      shell: osqueryi --json "select username,description from users"
+      shell: echo "select username,description from users;" | osqueryi
       register: users
+      
+    - name: Get OS information
+      shell: echo "select name,patch,build from os_version;" | osqueryi
+      register: os
 
     - debug:
         msg:
@@ -28,32 +24,40 @@
           - "{{ ips.stdout }}"
           - "Users"
           - "{{ users.stdout }}"
+          - "OS Information"
+          - "{{ os.stdout }}"
 
 - hosts: windows
   tasks:
     - name: Get hostname
-      win_command: osqueryi.exe --json "select local_hostname from system_info"
+      win_command: echo "select local_hostname from system_info;" | osqueryi
+      args:
+        executable: cmd
       register: hostname
 
     - name: Get connected domain
-      win_command: osqueryi.exe --json "select name from ntdomains"
+      win_command: echo "select name from ntdomains;" | osqueryi
+      args:
+        executable: cmd
       register: domain
 
-    - name: Get OS
-      win_command: osqueryi.exe --json "select name from os_version"
-      register: os
-
-    - name: Get patches
-      win_command: osqueryi.exe --json "select hotfix_id,installed_on from patches"
-      register: patches
-
     - name: Get IP information
-      win_command: osqueryi.exe --json "select friendly_name,address from interface_addresses"
+      win_command: echo "select friendly_name,address from interface_addresses;" | osqueryi
+      args:
+        executable: cmd
       register: ips
 
     - name: Get users
-      win_command: osqueryi.exe --json "select username,description from users"
+      win_command: echo "select username,description from users;" | osqueryi
+      args:
+        executable: cmd
       register: users
+      
+    - name: Get OS Information
+      win_command: echo "select name,patch,build from os_version;" | osqueryi
+      args:
+        executable: cmd
+      register: win_os
 
     - debug:
         msg:
@@ -61,11 +65,9 @@
           - "{{ hostname.stdout }}"
           - "Domain"
           - "{{ domain.stdout }}"
-          - "Operating System"
-          - "{{ os.stdout }}"
-          - "Patch Information"
-          - "{{ patches.stdout }}"
           - "IP Addresses"
           - "{{ ips.stdout }}"
           - "Users"
           - "{{ users.stdout }}"
+          - "OS Information"
+          - "{{ win_os.stdout }}"
