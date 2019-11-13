@@ -1,18 +1,47 @@
 - hosts: linux
   tasks:
-    - name: Get recent logins
-      shell: osqueryi --list "select * from logged_in_users"
-      register: logins
+    - name: Get Linux recent logins
+      shell: echo "select * from logged_in_users;" | osqueryi
+      register: l_logins
 
-    - name: Get processes
-      shell: osqueryi --list "select pid,name,uid from processes"
-      register: processes
+    - name: Get Linux processes
+      shell: echo "select pid,name,uid,parent,path from processes;" | osqueryi
+      register: l_processes
+      
+    - name: Get Linux outbound connections
+      shell: echo "select * from process_open_sockets where remote_port != 80 and remote_port != 443 and state != 'listen';" | osqueryi
+      register: l_connections
+      
+    - name: Print Linux information
+      debug:
+      msg:
+      - "Recent Logins"
+      - "{{ l_logins.stdout_lines }}"
+      - "Running Processes"
+      - "{{ l_processes }}"
+      - "Outbound Connections"
+      - "{{ l_connections.stdout_lines}}"
 
 - hosts: windows
   tasks:
-    - name: Get recent logins
-      win_command: "select logon_id,user,logon_domain,logon_sid from logon_sessions"
-      register: logins
+    - name: Get Windows recent logins
+      win_command: echo "select logon_id,user,logon_domain,logon_sid from logon_sessions;" | osqueryi
+      register: w_logins
 
-    - name: Get processes
-      win_command: osqueryi.exe --list "select pid,name,uid from processes"
+    - name: Get Windows processes
+      win_command: echo "select pid,name,uid,parent,path from processes;" | osqueryi
+      register: w_processes
+      
+    - name: Get outbound Windows connections
+      win_command: echo "select * from process_open_sockets where remote_port != 80 and remote_port != 443 and state != 'listen';" | osqueryi
+      register: w_connections
+      
+    - name: Print Windows information
+      debug:
+      msg:
+      - "Recent Logins"
+      - "{{ w_logins.stdout_lines }}"
+      - "Running Processes"
+      - "{{ w_processes }}"
+      - "Outbound Connections"
+      - "{{ w_connections.stdout_lines}}"
