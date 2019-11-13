@@ -1,19 +1,53 @@
 - hosts: linux
   tasks:
-    - name: Get recent logins
+    - name: Get linux recent logins
       shell: cat /var/log/auth.og | grep "Accepted" | cut -d' ' -f1,2,3,9
-      register: logins
+      register: l_logins
 
-    - name: Get running processes
+    - name: Get linux running processes
       shell: ps aux
-      register: processes
+      register: l_processes
 
-    - name: Get outbound connections
-      shell: blah
-      register: connections
+    - name: Get linux outbound connections
+      shell: netstat -atn | tr -s ' ' | cut -f5 -d ' ' | grep -v '127.0.0.1'
+      register: l_connections
+      
+    - name: Print Linux information
+    - debug:
+      msg:
+        - "Recent Logins"
+        - "{{ l_logins.stdout_lines }}"
+        - "Running Processes"
+        - "{{ l_processes.stdout_lines }}"
+        - "Outbound Connections"
+        - "{{ l_connections }}"
 
 - hosts: windows
   tasks:
-    - name: blah
-      win_command: blah
-      register: blah
+    - name: Get Windows recent logins
+      win_command: Get-LocalUser | Where-Object {$_.Lastlogon -ge (Get-Date).AddDays(-7)} | Select-Object Name,Enabled,Lastlogon | Format-List
+      args:
+        executable: powershell
+      register: w_logins
+
+    - name: Get Windows processes
+      win_command: ps | sort -desc path | select -first 100 | Format-Table -a; sleep 1; cls
+      args:
+        executable: powershell
+      register: w_processes
+     
+    - name: Get Windows outbound connections
+      win_command: Get-NetTCPConnection | where {$_.State -eq "Established"} 
+      args:
+       executable: powershell
+      register: w_connections
+       
+    - name: Print Windows information
+    - debug:
+      msg:
+        - "Recent Logins"
+        - "{{ w_logins.stdout_lines }}"
+        - "Running Processes"
+        - "{{ w_processes.stdout_lines }}"
+        - "Outbound Connections"
+        - "{{ w_connections }}"
