@@ -1,24 +1,26 @@
 - hosts: linux
+  become: true
   tasks:
     - name: Add repo key
       apt_key:
-        key_server: keyserver.ubuntu.com
+        keyserver: keyserver.ubuntu.com
         id: 1484120AC4E9F8A1A577AEEE97A80C63C9D8B80B
         state: present
+    
     - name: Add osquery repo
       apt_repository:
         repo: deb [arch=amd64] https://pkg.osquery.io/deb deb main
         state: present
+    
     - name: Update apt cache
       apt:
         update_cache: yes
         state: present
+
     - name: Install osquery
       apt:
         name: osquery
         state: present
-    - debug:
-        var: result.stdout_lines
 
 - hosts: windows
   become_method: runas
@@ -31,6 +33,12 @@
     - name: Install osquery
       win_chocolatey:
         name: osquery
+        state: present
+
+    - name: Add osqueryi to PATH
+      win_path:
+        elements:
+          - C:\Program Files\osquery
         state: present
 
     #- name: Enable Win Event Log
