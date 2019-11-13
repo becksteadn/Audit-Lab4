@@ -1,0 +1,40 @@
+- hosts: linux
+  tasks:
+    - name: Get installed applications
+      shell: osqueryi --list "select name from programs"
+      register: applications
+
+    - name: Get startup programs
+      shell: osqueryi --list "select name,path from startup_items"
+      register: startup
+
+    - name: Print host information
+      debug:
+        msg:
+          - "Installed applications"
+          - "{{ applications.stdout_lines | reject('equalto', '') | list }}"
+          - "Startup programs"
+          - "{{ startup.stdout_lines }}"
+
+- hosts: windows
+  become: true
+  become_method: runas
+  tasks:
+    - name: Get installed components
+
+
+    - name: Get installed applications
+      win_command: osqueryi.exe --list "select name from programs"
+      register: applications
+
+    - name: Get startup programs
+      shell: osqueryi.exe --list "select name,path from startup_items"
+      register: startup
+
+    - name: Print host information
+      debug:
+        msg:
+          - Installed applications"
+          - "{{ applications.stdout_lines | reject('equalto', '') | list }}"
+          - "Startup programs"
+          - "{{ startup.stdout_lines }}"

@@ -1,0 +1,18 @@
+- hosts: linux
+  tasks:
+    - name: Get recent logins
+      shell: osqueryi --list "select * from logged_in_users"
+      register: logins
+
+    - name: Get processes
+      shell: osqueryi --list "select pid,name,uid from processes"
+      register: processes
+
+- hosts: windows
+  tasks:
+    - name: Get recent logins
+      win_command: "select logon_id,user,logon_domain,logon_sid from logon_sessions"
+      register: logins
+
+    - name: Get processes
+      win_command: osqueryi.exe --list "select pid,name,uid from processes"

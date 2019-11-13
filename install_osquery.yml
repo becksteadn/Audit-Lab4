@@ -21,19 +21,18 @@
         var: result.stdout_lines
 
 - hosts: windows
+  become_method: runas
+  become_user: alice
   tasks:
     - name: Install chocolatey
-      win_command: powershell.exe -
-      args:
-        stdin: Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1')) && SET "PATH=%PATH%;%ALLUSERSPROFILE%\\chocolatey\\bin"
+      win_shell: Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
+      become: true
 
     - name: Install osquery
       win_chocolatey:
         name: osquery
         state: present
-    - name: Enable Win Event Log
-      win_command: powershell.exe -
-        args:
-          stdin: Set-ExecutionPolicy Bypass -Scope Process -Force; C:\\ProgramData\\osquery\\manage-osqueryd.ps1 -inbstallWelManifest
-    - debug:
-        var: result.stdout_lines
+
+    #- name: Enable Win Event Log
+    #  win_command: powershell.exe -Set-ExecutionPolicy Bypass -Scope Process -Force; "C:\\ProgramData\\osquery\\manage-osqueryd.ps1" -installWelManifest
+    #  become: true
